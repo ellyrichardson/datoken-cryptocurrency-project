@@ -1,0 +1,29 @@
+{
+    "name": "liquidity_mining",
+    "version": "0.0.1",
+    "description": "Prototype for a cryptocurrency liquidity mining app",
+    "author": "elly.richardson18@gmail.com",
+    "engines": {
+        "node": "10.19.x",
+        "npm": "7.9.x"
+    },
+    "dependencies": {
+        "chai": "4.2.0",
+        "chai-as-promised": "7.1.1",
+        "chai-bignumber": "3.0.0",
+        "web3": "1.2.1"
+    },
+    "devDependencies": {
+        "truffle": "^5.3.8"
+    },
+    "scripts": {
+        "ganache": "ganache-cli --networkId $npm_package_config_ganache_networkId --allowUnlimitedContractSize --gasLimit $npm_package_config_ganache_gasLimit --gasPrice $npm_package_config_ganache_gasPrice --mnemonic \"$MNEMONIC\""
+    },
+    "config": {
+        "ganache": {
+            "networkId": 3431,
+            "gasPrice": 25000000000,
+            "gasLimit": 6500000
+        }
+    }
+}

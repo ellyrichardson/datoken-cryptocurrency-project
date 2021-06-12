@@ -11,7 +11,7 @@ contract DaTokenSale {
     uint256 public daTokensSold;
     address payable admin;
 
-    event Sold(address _buyer, uint256 _tokenAmount, uint256 _totalCost);
+    event Sell(address _buyer, uint256 _tokenAmount, uint256 _totalCost);
 
     constructor(DaToken _daTokenContract, uint256 _daTokenPrice) public {
         admin = msg.sender;
@@ -25,14 +25,14 @@ contract DaTokenSale {
 
     function buyTokens(uint256 _numberOfTokens) public payable {
         uint256 totalCost = multiply(daTokenPrice, _numberOfTokens);
-        require(msg.value == totalCost);
+        require(msg.value == totalCost); // How to test this locally? (Probably add a wrong "value" in the buyTokens call)
         require(daTokenContract.balanceOf(address(this)) >= _numberOfTokens);
         require(_numberOfTokens > 0);
-        require(daTokenContract.transfer(msg.sender, _numberOfTokens));
+        require(daTokenContract.transfer(msg.sender, _numberOfTokens)); // How to test this locally?
 
         daTokensSold += _numberOfTokens;
 
-        emit Sold(msg.sender, _numberOfTokens, totalCost);
+        emit Sell(msg.sender, _numberOfTokens, totalCost);
     }
 
     function endTokenSale() public payable {

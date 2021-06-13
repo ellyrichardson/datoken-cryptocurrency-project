@@ -1,3 +1,5 @@
+const { assert } = require("chai");
+
 var DaTokenSale = artifacts.require("./DaTokenSale.sol");
 var DaToken = artifacts.require("./DaToken.sol")
 
@@ -8,6 +10,9 @@ contract('DaTokenSale', function(accounts) {
   var buyer = accounts[1];
   var tokenPrice;
   var numberOfTokens;
+
+  // Vars for the endTokenSaleTest
+
 
   it('initializes the contract with the correct values', function() {
     return DaTokenSale.deployed().then(function(instance) {
@@ -70,6 +75,33 @@ contract('DaTokenSale', function(accounts) {
       return tokenSaleInstance.buyTokens(numberOfTokens, { from: buyer, value: numberOfTokens * tokenPrice });
     }).then(assert.fail).catch(function(error) {
       assert(error.message.indexOf('revert') >= 0, 'cannot buy tokens if the amount of tokens bought is 0');
+    });
+  });
+
+  it('ending of sale must transfer remaining supply back to admin', function() {
+    return DaToken.deployed().then(function(instance) {
+      tokenInstance = instance;
+      return DaTokenSale.deployed()
+    }).then(function(instance) {
+      tokenSaleInstance = instance;
+      // Token sale Supply is only 5000 so that the test accounts will have enough ether when testing buying more than the supply
+      var tokenSaleSupply = 5000;
+      // Transferring tokens to the TokenSale
+      return tokenInstance.transfer(tokenSaleInstance.address, tokenSaleSupply, { from: admin });
+    }).then(function(receipt) {
+      // Sale cannot be ended if ender is not the admin
+      return tokenSaleInstance.endTokenSale({ from: buyer });
+    }).then(assert.fail).catch(function(error) {
+      assert(error.message.indexOf('revert') >= 0, 'Sale cannot be ended if ender is not the admin');
+      // Buy tokens greater than the amount available
+      //numberOfTokens = 5000;
+      return tokenSaleInstance.endTokenSale({ from: admin });
+    }).then(function(receipt) {
+      // Get the balance of Admin
+      return tokenInstance.balanceOf(admin);
+    }).then(function(adminBalance) {
+      var expectedAdminBalance = 999900;
+      assert.equal(adminBalance.toNumber(), expectedAdminBalance, 'Balance of admin must be the unsold tokens of DaTokenSale contract');
     });
   });
 });

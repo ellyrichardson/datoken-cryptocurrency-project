@@ -25,10 +25,10 @@ contract DaTokenSale {
 
     function buyTokens(uint256 _numberOfTokens) public payable {
         uint256 totalCost = multiply(daTokenPrice, _numberOfTokens);
-        require(msg.value == totalCost); // How to test this locally? (Probably add a wrong "value" in the buyTokens call)
+        require(msg.value == totalCost);
         require(daTokenContract.balanceOf(address(this)) >= _numberOfTokens);
         require(_numberOfTokens > 0);
-        require(daTokenContract.transfer(msg.sender, _numberOfTokens)); // How to test this locally?
+        require(daTokenContract.transfer(msg.sender, _numberOfTokens));
 
         daTokensSold += _numberOfTokens;
 

@@ -30,24 +30,43 @@ contract('MahYieldFarm', function(accounts) {
       daTokenInstance = instance;
       return MahToken.deployed();
     }).then(function(instance) {
-      mahTokenInstance = instance;
+        mahTokenInstance = instance;
+        return daTokenInstance.approve(yieldFarmInstance.address, 10, { from: yieldFarmUser });
+    }).then(function(approval) {
       var daTokenToStakeAmount = 10;
       return yieldFarmInstance.stakeDaToken(daTokenToStakeAmount, { from: yieldFarmUser });
     }).then(assert.fail).catch(function(error) {
       assert(error.message.indexOf('revert') >= 0, 'Staker cannot stake daTokens if it doesnt have enough daTokens');
-      var daTokenToStakeAmount = 0;
-      return yieldFarmInstance.stakeDaToken(daTokenToStakeAmount, { from: yieldFarmUser });
+      return yieldFarmInstance.doesStakerExist.call(yieldFarmUser, { from: yieldFarmUser });
+    }).then(function(stakerExist) {
+        assert.equal(false, stakerExist, 'YieldFarmUser must not be added to staker list of the YieldFarm');
+        var daTokenToStakeAmount = 0;
+        return yieldFarmInstance.stakeDaToken(daTokenToStakeAmount, { from: yieldFarmUser });
     }).then(assert.fail).catch(function(error) {
       assert(error.message.indexOf('revert') >= 0, 'Staker cannot stake daTokens if the stake amount is zero');
       // Transferring some tokens to the user
-      return daTokenInstance.transferFrom(yieldFarmUser, 100, { from: accounts[0] });
+      return yieldFarmInstance.doesStakerExist.call(yieldFarmUser, { from: yieldFarmUser });
+    }).then(function(stakerExist) {
+        assert.equal(false, stakerExist, 'YieldFarmUser must not be added to staker list of the YieldFarm');
+        // Transferring some tokens to the user
+      return daTokenInstance.transfer(yieldFarmUser, 100, { from: accounts[0] });
     }).then(function(receipt) {
-      var daTokenToStakeAmount = 10;
-      return yieldFarmInstance.stakeDaToken(daTokenToStakeAmount, { from: yieldFarmUser });
+        return daTokenInstance.balanceOf(yieldFarmUser);
+    }).then(function(balance) {
+        assert.equal(100, balance, 'YieldFarmUser should have correct balance');
+        var daTokenToStakeAmount = 10;
+        return yieldFarmInstance.stakeDaToken(daTokenToStakeAmount, { from: yieldFarmUser });
     }).then(function(stakeEvent) {
-      assert.equal(stakeEvent.logs.length, 1, 'triggers one Sell event');
-      assert.equal(stakeEvent.logs[0].event, 'Stake', 'should be the "Sell" event');
-      //assert.equal(stakeEvent.logs[0].args._buyer, buyer, 'should be the address of the buyer');
+        assert.equal(stakeEvent.logs.length, 1, 'triggers one Sell event');
+      assert.equal(stakeEvent.logs[0].event, 'Stake', 'should be the "Stake" event');
+      assert.equal(stakeEvent.logs[0].args._staker, yieldFarmUser, 'should be the address of the yield farm user');
+      assert.equal(stakeEvent.logs[0].args._daTokenAmount, 10, 'should have the correct token amount');
+        return daTokenInstance.balanceOf(yieldFarmUser);
+    }).then(function(balance) {
+        assert.equal(90, balance, 'YieldFarmUser should have correct balance');
+        return yieldFarmInstance.doesStakerExist.call(yieldFarmUser, { from: yieldFarmUser });
+    }).then(function(stakerExist) {
+        assert.equal(true, stakerExist, 'YieldFarmUser must be added to staker list of the YieldFarm');
     });
   });
 });
